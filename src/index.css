@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-cinzel: 'Cinzel', serif;
+    --font-devanagari: 'Noto Serif Devanagari', serif;
+    --font-rozha: 'Rozha One', serif;
+    --font-yatra: 'Yatra One', cursive;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Serif Devanagari', sans-serif;
+    background-color: #FFF9ED;
+    color: #24060D;
+  }
+
+  h1, h2, h3, .font-heading {
+    font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
+  }
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-devanagari {
+  font-family: 'Noto Serif Devanagari', serif;
+}
+
+.font-rozha {
+  font-family: 'Rozha One', 'Noto Serif Devanagari', serif;
+}
+
+.font-yatra {
+  font-family: 'Yatra One', 'Noto Serif Devanagari', cursive;
+}
+
+/* Sacred Mandala Subtle Pattern */
+.bg-mandala-pattern {
+  background-color: #FFF9ED;
+  background-image: radial-gradient(rgba(214, 173, 85, 0.15) 1.5px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* Luxury Color Gradients */
+.bg-maroon-royal {
+  background: linear-gradient(135deg, #350A16 0%, #24060D 100%);
+}
+
+.bg-maroon-card {
+  background: linear-gradient(145deg, #3A0C19 0%, #29080F 100%);
+}
+
+.bg-gold-metallic {
+  background: linear-gradient(135deg, #D6AD55 0%, #F5DE9C 50%, #B88930 100%);
+}
+
+.bg-saffron-gradient {
+  background: linear-gradient(135deg, #E58A16 0%, #F59E0B 50%, #C25E00 100%);
+}
+
+.bg-ivory-gradient {
+  background: linear-gradient(135deg, #FFFDF8 0%, #FFF9ED 50%, #FBF3DF 100%);
+}
+
+.text-gold-luxury {
+  background: linear-gradient(135deg, #ECC87A 0%, #D6AD55 50%, #AA7B25 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-saffron-luxury {
+  background: linear-gradient(135deg, #F97316 0%, #E58A16 50%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Subtle Animated Om Background */
+@keyframes pulseOm {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.05;
+  }
+  50% {
+    transform: scale(1.08) rotate(3deg);
+    opacity: 0.10;
+  }
+}
+
+.animate-om-slow {
+  animation: pulseOm 12s ease-in-out infinite;
+}
+
+/* Luxury Ornate Gold Border */
+.ornate-gold-frame {
+  position: relative;
+  border: 1px solid rgba(214, 173, 85, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(53, 10, 22, 0.25);
+}
+
+.ornate-gold-frame::before,
+.ornate-gold-frame::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #D6AD55;
+  pointer-events: none;
+}
+
+.ornate-gold-frame::before {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid #D6AD55;
+  border-left: 2px solid #D6AD55;
+}
+
+.ornate-gold-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 2px solid #D6AD55;
+  border-right: 2px solid #D6AD55;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF9ED;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D6AD55;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B88930;
+}
