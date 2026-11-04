@@ -20,18 +20,34 @@ export interface ServiceItem {
 export interface BookingFormData {
   fullName: string;
   mobile: string;
-  email: string;
+  whatsapp?: string;
+  sameAsMobile?: boolean;
   serviceId: string;
   preferredDate: string;
+  preferredTime?: string;
+  address?: string;
   location: string;
   message: string;
+  utrNumber?: string;
+  advanceAmount?: string;
+  screenshotBase64?: string;
+}
+
+export interface BankDetails {
+  accountNumber: string;
+  holderName: string;
+  bankName: string;
+  branch: string;
+  ifsc: string;
+  accountType: string;
+  upiId?: string;
 }
 
 export interface GalleryItem {
   id: string;
   titleHi: string;
   titleEn: string;
-  category: 'temple' | 'puja' | 'havan' | 'festivals';
+  category: string;
   categoryLabelHi: string;
   categoryLabelEn: string;
   imageSrc: string;
@@ -43,5 +59,5 @@ export interface Shloka {
   sanskrit: string;
   meaningHi: string;
   meaningEn: string;
-  source: string;
+  source?: string;
 }

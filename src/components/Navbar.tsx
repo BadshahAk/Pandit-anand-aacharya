@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenSamagriGuid
     { href: '#home', labelHi: 'मुखपृष्ठ', labelEn: 'Home' },
     { href: '#about', labelHi: 'परिचय', labelEn: 'About Me' },
     { href: '#services', labelHi: 'पूजन सेवाएं', labelEn: 'Puja Services' },
-    { href: '#gallery', labelHi: 'दीर्घा', labelEn: 'Gallery' },
+    { href: '#payment', labelHi: 'अग्रिम दक्षिणा', labelEn: 'Advance Dakshina' },
     { href: '#contact', labelHi: 'संपर्क', labelEn: 'Contact' },
   ];
 

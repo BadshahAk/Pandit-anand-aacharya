@@ -110,8 +110,8 @@ export const Footer: React.FC<FooterProps> = ({
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="hover:text-[#D6AD55] transition-colors">
-                  {t('छायाचित्र दीर्घा (Gallery)', 'Photo Gallery')}
+                <a href="#payment" className="hover:text-[#D6AD55] transition-colors">
+                  {t('अग्रिम दक्षिणा व खाता (Advance Payment)', 'Advance Payment & Bank')}
                 </a>
               </li>
               <li>

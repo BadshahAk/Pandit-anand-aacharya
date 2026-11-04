@@ -9,7 +9,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
 import { Services } from './components/Services';
-import { Gallery } from './components/Gallery';
+import { AdvancePayment } from './components/AdvancePayment';
 import { BookingContact } from './components/BookingContact';
 import { Footer } from './components/Footer';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
@@ -25,7 +25,7 @@ function MainWebsite() {
 
   // State for modals & booking service pre-selection
   const [selectedServiceForDetails, setSelectedServiceForDetails] = useState<ServiceItem | null>(null);
-  const [preSelectedServiceId, setPreSelectedServiceId] = useState<string>('puja-path');
+  const [preSelectedServiceId, setPreSelectedServiceId] = useState<string>('satyanarayan-katha');
   const [isSamagriModalOpen, setIsSamagriModalOpen] = useState(false);
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
   const [show404, setShow404] = useState(false);
@@ -90,8 +90,8 @@ function MainWebsite() {
           onOpenDetailsModal={(service) => setSelectedServiceForDetails(service)}
         />
 
-        {/* Photo Gallery Section */}
-        <Gallery />
+        {/* Advance Payment Section (SBI Account Details & How to Pay) */}
+        <AdvancePayment onProceedToBooking={handleOpenBooking} />
 
         {/* Booking Form & Contact Section */}
         <BookingContact initialServiceId={preSelectedServiceId} />

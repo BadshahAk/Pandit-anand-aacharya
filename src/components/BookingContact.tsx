@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Phone,
   MessageCircle,
@@ -10,7 +10,10 @@ import {
   CheckCircle,
   AlertCircle,
   Sparkles,
-  Bot,
+  Upload,
+  X,
+  FileImage,
+  CreditCard,
   Copy,
   Check
 } from 'lucide-react';
@@ -23,6 +26,7 @@ interface BookingContactProps {
 
 export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId }) => {
   const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -34,18 +38,17 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
     preferredTime: 'प्रातःकाल (Morning 07:00 AM - 11:00 AM)',
     address: '',
     location: 'Chirawa, Jhunjhunu',
-    message: ''
+    message: '',
+    advanceAmount: '',
+    utrNumber: '',
+    screenshotBase64: ''
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [telegramStatus, setTelegramStatus] = useState<{
-    delivered: boolean;
-    pendingConfig: boolean;
-    istTime?: string;
-  } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotName, setScreenshotName] = useState<string>('');
 
   useEffect(() => {
     if (initialServiceId) {
@@ -60,6 +63,42 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
       mobile: val,
       whatsapp: prev.sameAsMobile ? val : prev.whatsapp
     }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setFormErrors((prev) => ({
+        ...prev,
+        screenshot: t('कृपया 8 MB से छोटी फोटो चुनें', 'Please choose an image under 8 MB')
+      }));
+      return;
+    }
+
+    setScreenshotName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setScreenshotPreview(base64String);
+      setFormData((prev) => ({ ...prev, screenshotBase64: base64String }));
+      setFormErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.screenshot;
+        return copy;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveScreenshot = () => {
+    setScreenshotPreview(null);
+    setScreenshotName('');
+    setFormData((prev) => ({ ...prev, screenshotBase64: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const validate = (): boolean => {
@@ -101,8 +140,11 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
       `• समय: ${formData.preferredTime}\n` +
       `• शहर / स्थान: ${formData.location}\n` +
       (formData.address ? `• पूरा पता: ${formData.address}\n` : '') +
+      (formData.advanceAmount ? `• अग्रिम दक्षिणा राशि: ₹${formData.advanceAmount}\n` : '') +
+      (formData.utrNumber ? `• UTR / लेन-देन संख्या: ${formData.utrNumber}\n` : '') +
+      (formData.screenshotBase64 ? `• भुगतान स्क्रीनशॉट: फॉर्म में संलग्न\n` : '') +
       (formData.message ? `• विशेष संदेश / गोत्र: ${formData.message}\n` : '') +
-      `\nकृपया शुभ मुहूर्त, आवश्यक सामग्री एवं उपलब्धता की पुष्टि करने की कृपा करें।\nधन्यवाद!`
+      `\nकृपया शुभ मुहूर्त एवं अनुष्ठान समय की पुष्टि करने की कृपा करें।\nधन्यवाद!`
     );
   };
 
@@ -117,7 +159,6 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
     const finalWhatsapp = formData.sameAsMobile ? formData.mobile : formData.whatsapp;
 
     try {
-      // Step 2: POST to secure backend endpoint
       const res = await fetch('/api/enquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,29 +171,23 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
           preferredTime: formData.preferredTime,
           address: formData.address,
           location: formData.location,
-          message: formData.message
+          message: formData.message,
+          advanceAmount: formData.advanceAmount,
+          utrNumber: formData.utrNumber,
+          screenshotBase64: formData.screenshotBase64
         })
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setTelegramStatus({
-          delivered: Boolean(data.deliveredToTelegram),
-          pendingConfig: Boolean(data.pendingTelegramConfig),
-          istTime: data.istTimestamp
-        });
         setSubmissionSuccess(true);
       } else {
         setFormErrors({ submit: data.error || 'Submission failed. Please try again or message directly on WhatsApp.' });
       }
     } catch (err: any) {
       console.warn('Backend enquiry dispatch notice:', err);
-      // Fallback: If network error or backend offline, still grant success and provide 1-click WhatsApp so user is never blocked
-      setTelegramStatus({
-        delivered: false,
-        pendingConfig: true
-      });
+      // Graceful success state so user is never blocked
       setSubmissionSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -165,16 +200,9 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
     window.open(`https://wa.me/${SITE_CONFIG.contact.whatsappNumber}?text=${encoded}`, '_blank', 'noopener,noreferrer');
   };
 
-  const handleCopyMessage = () => {
-    const msg = generateWhatsAppMessage();
-    navigator.clipboard.writeText(msg);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
   const handleResetForm = () => {
     setSubmissionSuccess(false);
-    setTelegramStatus(null);
+    handleRemoveScreenshot();
     setFormData({
       fullName: '',
       mobile: '',
@@ -185,7 +213,10 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
       preferredTime: 'प्रातःकाल (Morning 07:00 AM - 11:00 AM)',
       address: '',
       location: 'Chirawa, Jhunjhunu',
-      message: ''
+      message: '',
+      advanceAmount: '',
+      utrNumber: '',
+      screenshotBase64: ''
     });
   };
 
@@ -196,15 +227,15 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs uppercase tracking-widest text-[#E58A16] font-bold block mb-1">
-            {t('पूजन संकल्प एवं परामर्श', 'Puja Booking & Consultation')}
+            {t('पूजन संकल्प एवं अग्रिम दक्षिणा', 'Puja Booking & Advance Dakshina')}
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold font-devanagari text-[#350A16] mb-3">
-            {t('पण्डित जी से सीधा संपर्क एवं बुकिंग', 'Connect Directly with Pandit Anand Acharya')}
+            {t('पूजा बुकिंग एवं संकल्प फॉर्म', 'Puja Booking & Sankalpa Form')}
           </h2>
           <p className="text-sm text-stone-600">
             {t(
-              'शुभ मुहूर्त, पूजन अनुष्ठान एवं वैदिक विधि के संबंध में अपनी आवश्यकता साझा करें।',
-              'Share your ceremony requirements, dates, and receive sacred guidance.'
+              'विवरण भरें, इच्छानुसार अग्रिम दक्षिणा UTR नंबर व स्क्रीनशॉट संलग्न करें और सबमिट करें।',
+              'Fill in your details, attach your advance UTR/screenshot if paid, and submit.'
             )}
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#D6AD55] to-transparent mx-auto mt-4" />
@@ -213,18 +244,18 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
         {/* 2-Column Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           
-          {/* Left Column: Booking Form with Telegram Backend Integration */}
-          <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 border border-[#D6AD55]/50 shadow-xl">
+          {/* Left Column: Booking Form */}
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-[#D6AD55]/50 shadow-2xl">
             
             {!submissionSuccess ? (
               <>
                 <div className="flex items-center justify-between pb-4 mb-6 border-b border-amber-100">
                   <div>
                     <h3 className="text-xl font-bold font-devanagari text-[#350A16]">
-                      {t('पूजा बुकिंग एवं संकल्प फॉर्म', 'Puja Booking & Enquiry Form')}
+                      {t('यजमान विवरण एवं पूजन संकल्प', 'Devotee & Ceremony Details')}
                     </h3>
                     <p className="text-xs text-stone-500">
-                      {t('यह अनुरोध सीधे पंडित जी के सुरक्षित सिस्टम / टेलीग्राम बॉट पर प्रेषित होगा', 'This enquiry is delivered securely to Pandit ji')}
+                      {t('पूर्ण शुचिता एवं शास्त्रीय मर्यादा के साथ अनुष्ठान संयोजन', 'Conducted with strict scriptural sanctity')}
                     </p>
                   </div>
                   <span className="text-2xl text-[#E58A16]">🕉️</span>
@@ -242,7 +273,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       placeholder={t('उदा. श्री रमेश कुमार शर्मा', 'e.g., Ramesh Kumar Sharma')}
-                      className={`w-full px-3.5 py-2.5 rounded-lg border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
                         formErrors.fullName ? 'border-red-400 bg-red-50/20' : 'border-stone-300'
                       }`}
                     />
@@ -262,8 +293,8 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                         required
                         value={formData.mobile}
                         onChange={handleMobileChange}
-                        placeholder={t('उदा. +91 9116050506', 'e.g., +91 9876543210')}
-                        className={`w-full px-3.5 py-2.5 rounded-lg border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
+                        placeholder={t('उदा. 9116050506', 'e.g., +91 9116050506')}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
                           formErrors.mobile ? 'border-red-400 bg-red-50/20' : 'border-stone-300'
                         }`}
                       />
@@ -290,7 +321,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                             }
                             className="rounded text-[#E58A16] focus:ring-0"
                           />
-                          <span>{t('मोबाइल समान', 'Same')}</span>
+                          <span>{t('समान', 'Same')}</span>
                         </label>
                       </div>
                       <input
@@ -299,7 +330,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                         value={formData.sameAsMobile ? formData.mobile : formData.whatsapp}
                         onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                         placeholder={t('WhatsApp नंबर', 'WhatsApp Number')}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] disabled:opacity-60 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] disabled:opacity-60 transition-all"
                       />
                     </div>
                   </div>
@@ -313,7 +344,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                       <select
                         value={formData.serviceId}
                         onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
                       >
                         {SITE_CONFIG.services.map((s) => (
                           <option key={s.id} value={s.id}>
@@ -332,7 +363,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                         type="date"
                         value={formData.preferredDate}
                         onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
                       />
                     </div>
                   </div>
@@ -346,7 +377,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                       <select
                         value={formData.preferredTime}
                         onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
                       >
                         <option value="प्रातःकाल (Morning 07:00 AM - 11:00 AM)">
                           {t('प्रातःकाल (Morning 07:00 AM - 11:00 AM)', 'Morning (07:00 AM - 11:00 AM)')}
@@ -357,7 +388,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                         <option value="सायंकाल (Evening 04:00 PM - 08:00 PM)">
                           {t('सायंकाल (Evening 04:00 PM - 08:00 PM)', 'Evening (04:00 PM - 08:00 PM)')}
                         </option>
-                        <option value="शुभ मुहूर्त अनुसार (As per Shubh Muhurat)">
+                        <option value="शुभ मुहूर्त अनुसार (पंडित जी से परामर्श)">
                           {t('शुभ मुहूर्त अनुसार (पंडित जी के परामर्श से)', 'As per Auspicious Muhurat')}
                         </option>
                       </select>
@@ -373,7 +404,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                         placeholder={t('उदा. चिड़ावा, झुंझुनूं / जयपुर / दिल्ली आदि', 'e.g., Chirawa, Jhunjhunu / Jaipur etc.')}
-                        className={`w-full px-3.5 py-2.5 rounded-lg border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all ${
                           formErrors.location ? 'border-red-400 bg-red-50/20' : 'border-stone-300'
                         }`}
                       />
@@ -393,8 +424,113 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       placeholder={t('मकान सं., गली, मोहल्ला / कॉलोनी का नाम...', 'House / Street / Colony name...')}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all"
                     />
+                  </div>
+
+                  {/* Advance Payment Details Section (New Feature) */}
+                  <div className="p-4 rounded-2xl bg-[#FFF9ED] border border-[#D6AD55]/60 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#350A16] uppercase tracking-wider flex items-center gap-1.5">
+                        <CreditCard className="w-4 h-4 text-[#E58A16]" />
+                        <span>{t('अग्रिम दक्षिणा / भुगतान विवरण (वैकल्पिक)', 'Advance Dakshina / Payment (Optional)')}</span>
+                      </span>
+                      <a
+                        href="#payment"
+                        className="text-[11px] font-semibold text-[#E58A16] hover:underline"
+                      >
+                        {t('बैंक खाता देखें', 'View Bank Info')}
+                      </a>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Advance Amount */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                          {t('अग्रिम राशि (यदि भेजी गई हो)', 'Advance Amount (If Paid)')}
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.advanceAmount}
+                          onChange={(e) => setFormData({ ...formData, advanceAmount: e.target.value })}
+                          placeholder={t('उदा. ₹501 / ₹1100 / ₹2100', 'e.g., ₹501 / ₹1100')}
+                          className="w-full px-3 py-2 rounded-lg border border-stone-300 text-xs text-stone-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55]"
+                        />
+                      </div>
+
+                      {/* UTR Number */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                          {t('UTR / लेन-देन संख्या (UTR / Ref Number)', 'UTR / Transaction ID')}
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.utrNumber}
+                          onChange={(e) => setFormData({ ...formData, utrNumber: e.target.value })}
+                          placeholder={t('उदा. 12 अंकीय UTR / UPI Ref ID', 'e.g., 12-digit UTR number')}
+                          className="w-full px-3 py-2 rounded-lg border border-stone-300 text-xs text-stone-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Screenshot Upload with Preview */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                        {t('भुगतान स्क्रीनशॉट / रसीद अपलोड करें', 'Upload Payment Screenshot / Receipt')}
+                      </label>
+
+                      {!screenshotPreview ? (
+                        <div
+                          onClick={() => fileInputRef.current?.click()}
+                          className="border-2 border-dashed border-[#D6AD55]/60 hover:border-[#D6AD55] bg-white rounded-xl p-3 text-center cursor-pointer transition-colors"
+                        >
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                          <div className="flex flex-col items-center justify-center gap-1 text-xs text-stone-600">
+                            <Upload className="w-5 h-5 text-[#E58A16]" />
+                            <span className="font-semibold text-[#350A16]">
+                              {t('स्क्रीनशॉट फ़ाइल चुनें (Click to Upload)', 'Click to choose screenshot')}
+                            </span>
+                            <span className="text-[10px] text-stone-400">JPG, PNG (Max 8 MB)</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#D6AD55] gap-3">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <img
+                              src={screenshotPreview}
+                              alt="Payment Screenshot Preview"
+                              className="w-10 h-10 object-cover rounded-lg border border-stone-200 shrink-0"
+                            />
+                            <div className="overflow-hidden">
+                              <span className="text-xs font-semibold text-[#350A16] truncate block">
+                                {screenshotName || t('स्क्रीनशॉट संलग्न', 'Screenshot Attached')}
+                              </span>
+                              <span className="text-[10px] text-emerald-600 font-bold block">
+                                ✓ {t('अपलोड हेतु तैयार', 'Ready to submit')}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveScreenshot}
+                            className="p-1 rounded-full text-stone-400 hover:text-red-600 hover:bg-stone-100 transition-colors cursor-pointer"
+                            title="हटाएं"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      {formErrors.screenshot && (
+                        <p className="text-xs text-red-600 mt-1">{formErrors.screenshot}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Message / Gotra */}
@@ -403,16 +539,16 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                       {t('विशेष संदेश / गोत्र विवरण / विशेष प्रार्थना', 'Special Notes / Gotra / Queries')}
                     </label>
                     <textarea
-                      rows={3}
+                      rows={2}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder={t('गोत्र, कुलदेवता अथवा समय से संबंधित कोई भी सूचना...', 'Gotra, family deity or timing notes...')}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all resize-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-sm text-stone-900 bg-[#FFF9ED]/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D6AD55] transition-all resize-none"
                     />
                   </div>
 
                   {formErrors.submit && (
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
                       {formErrors.submit}
                     </div>
                   )}
@@ -422,7 +558,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full sm:flex-1 py-3.5 px-6 rounded-lg bg-gradient-to-r from-[#E58A16] to-[#C25E00] hover:from-[#F59E0B] hover:to-[#E58A16] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      className="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#E58A16] to-[#C25E00] hover:from-[#F59E0B] hover:to-[#E58A16] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
                       {isSubmitting ? (
                         <>
@@ -441,7 +577,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
                     <button
                       type="button"
                       onClick={handleOpenWhatsAppFromSuccess}
-                      className="w-full sm:w-auto py-3.5 px-5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full sm:w-auto py-3.5 px-5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>{t('WhatsApp पर भेजें', 'Direct WhatsApp')}</span>
@@ -450,63 +586,42 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
 
                   <p className="text-[11px] text-stone-500 text-center mt-2">
                     {t(
-                      '🔒 यजमान की जानकारी पूर्णतः सुरक्षित एवं गोपनीय रखी जाती है।',
-                      '🔒 Your details are kept strictly confidential and secure.'
+                      '🔒 यजमान की जानकारी एवं भुगतान रसीद पूर्णतः सुरक्षित रखी जाती है।',
+                      '🔒 Your details and payment receipts are kept strictly secure and confidential.'
                     )}
                   </p>
                 </form>
               </>
             ) : (
-              /* Beautiful Step 4 & 5 Confirmation Screen */
-              <div className="py-6 px-2 text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 border-2 border-emerald-300 shadow-md">
-                  <CheckCircle className="w-9 h-9" />
+              /* User explicitly requested: NO TELEGRAM NAME, ONLY "फॉर्म सबमिट हो गया" with DONE sign */
+              <div className="py-10 px-4 text-center animate-in fade-in zoom-in-95">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-5 border-4 border-emerald-300 shadow-xl">
+                  <CheckCircle className="w-12 h-12" />
                 </div>
 
-                <h3 className="text-2xl font-bold font-devanagari text-[#350A16] mb-2">
-                  {t('पूजा संकल्प अनुरोध प्राप्त हुआ!', 'Enquiry Received Successfully!')}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold mb-3 border border-emerald-200">
+                  <span>✓ DONE</span>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-bold font-devanagari text-[#350A16] mb-3">
+                  {t('फॉर्म सफलतापूर्वक सबमिट हो गया!', 'Form Submitted Successfully!')}
                 </h3>
 
-                <p className="text-sm text-stone-700 max-w-md mx-auto mb-4 leading-relaxed">
+                <p className="text-sm text-stone-700 max-w-md mx-auto mb-6 leading-relaxed">
                   {t(
-                    'धन्यवाद! आपका विवरण सुरक्षित रूप से दर्ज कर लिया गया है। पंडित आनन्द आचार्य जी व्यक्तिगत रूप से आपसे संपर्क कर तिथि व मुहूर्त की पुष्टि करेंगे।',
-                    'Thank you! Your inquiry has been securely submitted. Pandit Anand Acharya will personally consult with you regarding date availability and auspicious muhurat.'
+                    'आपका पूजा संकल्प एवं विवरण सफलतापूर्वक प्राप्त हो गया है। पण्डित आनन्द आचार्य जी शीघ्र ही आपसे संपर्क कर तिथि व मुहूर्त की पुष्टि करेंगे।',
+                    'Your puja enquiry and details have been received successfully. Pandit Anand Acharya will contact you soon to confirm the date and auspicious muhurat.'
                   )}
                 </p>
-
-                {/* Telegram Bot Delivery Status Badge */}
-                <div className="p-3.5 rounded-xl bg-[#FFF9ED] border border-[#D6AD55]/60 max-w-md mx-auto mb-6 text-left">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Bot className="w-4 h-4 text-[#350A16]" />
-                    <span className="text-xs font-bold text-[#350A16]">
-                      {telegramStatus?.delivered
-                        ? t('टेलीग्राम बॉट पर पुष्टि: सफलतापूर्वक प्रेषित ✅', 'Telegram Bot: Delivered Successfully ✅')
-                        : t('सिस्टम स्थिति: अनुरोध दर्ज (बॉट कनेक्टेड) ℹ️', 'System Status: Recorded & Bot Synced ℹ️')}
-                    </span>
-                  </div>
-                  {telegramStatus?.istTime && (
-                    <p className="text-[11px] text-stone-500">
-                      {t('समय: ', 'Recorded at: ')} {telegramStatus.istTime}
-                    </p>
-                  )}
-                </div>
 
                 {/* Immediate WhatsApp Connect Button */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
                   <button
                     onClick={handleOpenWhatsAppFromSuccess}
-                    className="w-full sm:w-auto py-3 px-6 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                    className="w-full sm:w-auto py-3 px-6 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span>{t('WhatsApp पर संदेश भेजें (फास्ट रिस्पॉन्स)', 'Open in WhatsApp')}</span>
-                  </button>
-
-                  <button
-                    onClick={handleCopyMessage}
-                    className="w-full sm:w-auto py-3 px-4 rounded-lg bg-white border border-[#D6AD55] text-[#350A16] hover:bg-[#FFF9ED] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#D6AD55]" />}
-                    <span>{copied ? t('कॉपी हो गया!', 'Copied!') : t('विवरण कॉपी करें', 'Copy Details')}</span>
+                    <span>{t('WhatsApp पर भी बात करें', 'Chat on WhatsApp')}</span>
                   </button>
                 </div>
 
@@ -525,7 +640,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
           <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
             
             {/* Direct Contact Card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-7 border border-[#D6AD55]/50 shadow-xl">
+            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#D6AD55]/50 shadow-xl">
               <h3 className="text-lg font-bold font-devanagari text-[#350A16] mb-4 pb-3 border-b border-amber-100 flex items-center justify-between">
                 <span>{t('सीधा संपर्क विवरण', 'Direct Contact Details')}</span>
                 <span className="text-xs font-serif text-[#D6AD55] font-bold">
@@ -603,7 +718,7 @@ export const BookingContact: React.FC<BookingContactProps> = ({ initialServiceId
             </div>
 
             {/* Google Maps Location Embed for Chirawa, Jhunjhunu, Rajasthan */}
-            <div className="bg-white rounded-2xl overflow-hidden border border-[#D6AD55]/50 shadow-xl">
+            <div className="bg-white rounded-3xl overflow-hidden border border-[#D6AD55]/50 shadow-xl">
               <div className="p-3 bg-[#350A16] text-[#FFF9ED] flex items-center justify-between text-xs">
                 <span className="font-bold flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-[#D6AD55]" />

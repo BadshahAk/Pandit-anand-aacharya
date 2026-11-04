@@ -46,6 +46,19 @@ export const SITE_CONFIG = {
     }
   },
 
+  // Advance Payment & Bank Account Details
+  bankDetails: {
+    accountNumber: "44823562491",
+    holderName: "Anand Sharma",
+    bankName: "State Bank of India (SBI)",
+    branch: "CHIRAWA (चिड़ावा)",
+    ifsc: "SBIN0005103",
+    accountType: "Savings Account (बचत खाता)",
+    suggestedAmounts: ["501", "1100", "2100", "5100"],
+    noteHi: "पूजा संकल्प एवं समय निर्धारण हेतु इच्छानुसार अग्रिम दक्षिणा राशि बैंक ट्रांसफर अथवा UPI द्वारा भेज सकते हैं। भुगतान के पश्चात UTR नंबर एवं स्क्रीनशॉट अवश्य संलग्न करें।",
+    noteEn: "You can send advance dakshina via Bank Transfer or UPI for ceremony confirmation. Please attach the UTR number and screenshot after payment."
+  },
+
   // Personal Profile
   profile: {
     fullName: "Anand Sharma",
