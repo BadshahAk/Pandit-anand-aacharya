@@ -2,140 +2,203 @@
 
 @layer base {
   :root {
-    --font-cinzel: 'Cinzel', serif;
-    --font-devanagari: 'Noto Serif Devanagari', serif;
-    --font-rozha: 'Rozha One', serif;
-    --font-yatra: 'Yatra One', cursive;
+    --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    --font-script: 'Dancing Script', cursive;
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', 'Noto Serif Devanagari', sans-serif;
-    background-color: #FFF9ED;
-    color: #24060D;
+    font-family: var(--font-sans);
+    background-color: #FFF8F6;
+    color: #2D1B22;
+    overflow-x: hidden;
   }
 
-  h1, h2, h3, .font-heading {
-    font-family: 'Noto Serif Devanagari', 'Cinzel', serif;
+  h1, h2, h3, h4, .font-serif-luxury {
+    font-family: var(--font-serif);
+  }
+
+  .font-script {
+    font-family: var(--font-script);
   }
 }
 
-.font-cinzel {
-  font-family: 'Cinzel', serif;
+/* Custom Romantic Theme Utilities */
+.bg-warm-cream {
+  background-color: #FFF9F5;
 }
 
-.font-devanagari {
-  font-family: 'Noto Serif Devanagari', serif;
+.bg-soft-blush {
+  background-color: #FFF0F2;
 }
 
-.font-rozha {
-  font-family: 'Rozha One', 'Noto Serif Devanagari', serif;
+.bg-rose-glass {
+  background: rgba(255, 245, 247, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 143, 177, 0.22);
 }
 
-.font-yatra {
-  font-family: 'Yatra One', 'Noto Serif Devanagari', cursive;
+.bg-rose-glass-dark {
+  background: rgba(29, 14, 22, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 143, 177, 0.2);
 }
 
-/* Sacred Mandala Subtle Pattern */
-.bg-mandala-pattern {
-  background-color: #FFF9ED;
-  background-image: radial-gradient(rgba(214, 173, 85, 0.15) 1.5px, transparent 0);
-  background-size: 28px 28px;
+.bg-gold-glass {
+  background: rgba(255, 253, 247, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
 }
 
-/* Luxury Color Gradients */
-.bg-maroon-royal {
-  background: linear-gradient(135deg, #350A16 0%, #24060D 100%);
-}
-
-.bg-maroon-card {
-  background: linear-gradient(145deg, #3A0C19 0%, #29080F 100%);
-}
-
-.bg-gold-metallic {
-  background: linear-gradient(135deg, #D6AD55 0%, #F5DE9C 50%, #B88930 100%);
-}
-
-.bg-saffron-gradient {
-  background: linear-gradient(135deg, #E58A16 0%, #F59E0B 50%, #C25E00 100%);
-}
-
-.bg-ivory-gradient {
-  background: linear-gradient(135deg, #FFFDF8 0%, #FFF9ED 50%, #FBF3DF 100%);
-}
-
-.text-gold-luxury {
-  background: linear-gradient(135deg, #ECC87A 0%, #D6AD55 50%, #AA7B25 100%);
+.text-gold-gradient {
+  background: linear-gradient(135deg, #DFB76C 0%, #B8860B 50%, #E5C158 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.text-saffron-luxury {
-  background: linear-gradient(135deg, #F97316 0%, #E58A16 50%, #B45309 100%);
+.text-rose-gradient {
+  background: linear-gradient(135deg, #E63946 0%, #E85D75 40%, #FA709A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Subtle Animated Om Background */
-@keyframes pulseOm {
+.text-romantic-gradient {
+  background: linear-gradient(135deg, #C2185B 0%, #E91E63 50%, #F06292 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-rose-gold {
+  border-color: rgba(230, 169, 178, 0.4);
+}
+
+.shadow-romantic-soft {
+  box-shadow: 0 10px 30px -10px rgba(232, 93, 117, 0.15), 0 4px 12px rgba(212, 175, 55, 0.08);
+}
+
+.shadow-romantic-glow {
+  box-shadow: 0 0 25px rgba(244, 143, 177, 0.35);
+}
+
+.shadow-gold-glow {
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+}
+
+/* Animations */
+@keyframes floatGentle {
   0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.05;
+    transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: scale(1.08) rotate(3deg);
-    opacity: 0.10;
+    transform: translateY(-8px) rotate(1.5deg);
   }
 }
 
-.animate-om-slow {
-  animation: pulseOm 12s ease-in-out infinite;
+@keyframes petalDrift {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) translateX(40px) rotate(360deg);
+    opacity: 0;
+  }
 }
 
-/* Luxury Ornate Gold Border */
-.ornate-gold-frame {
-  position: relative;
-  border: 1px solid rgba(214, 173, 85, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(53, 10, 22, 0.25);
+@keyframes heartPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }
 
-.ornate-gold-frame::before,
-.ornate-gold-frame::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: #D6AD55;
-  pointer-events: none;
+@keyframes sparkleTwinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
-.ornate-gold-frame::before {
-  top: -2px;
-  left: -2px;
-  border-top: 2px solid #D6AD55;
-  border-left: 2px solid #D6AD55;
+.animate-float-gentle {
+  animation: floatGentle 6s ease-in-out infinite;
 }
 
-.ornate-gold-frame::after {
-  bottom: -2px;
-  right: -2px;
-  border-bottom: 2px solid #D6AD55;
-  border-right: 2px solid #D6AD55;
+.animate-heart-pulse {
+  animation: heartPulse 2.5s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkleTwinkle 3s ease-in-out infinite;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FFF9ED;
+  background: #FFF5F7;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #180D14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D6AD55;
-  border-radius: 4px;
+  background: #F48FB1;
+  border-radius: 9999px;
+  border: 2px solid #FFF5F7;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #AD1457;
+  border: 2px solid #180D14;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B88930;
+  background: #EC407A;
+}
+
+/* Elegant Ornate Rose-Gold Corner Accents */
+.romantic-frame {
+  position: relative;
+  border: 1px solid rgba(244, 143, 177, 0.35);
+}
+
+.romantic-frame::before,
+.romantic-frame::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #D4AF37;
+  pointer-events: none;
+}
+
+.romantic-frame::before {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid #D4AF37;
+  border-left: 2px solid #D4AF37;
+}
+
+.romantic-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 2px solid #D4AF37;
+  border-right: 2px solid #D4AF37;
 }

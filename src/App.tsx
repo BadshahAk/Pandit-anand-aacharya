@@ -1,138 +1,133 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState } from 'react';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import React, { useState, useEffect } from 'react';
+import { OpeningExperience } from './components/OpeningExperience';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { About } from './components/About';
-import { Services } from './components/Services';
-import { AdvancePayment } from './components/AdvancePayment';
-import { BookingContact } from './components/BookingContact';
+import { AboutMe } from './components/AboutMe';
+import { PersonalityCards } from './components/PersonalityCards';
+import { MyDreams } from './components/MyDreams';
+import { MyJourney } from './components/MyJourney';
+import { LoveAndFeelings } from './components/LoveAndFeelings';
+import { FavouriteThings } from './components/FavouriteThings';
+import { TravelDiaries } from './components/TravelDiaries';
+import { PhotoGallery } from './components/PhotoGallery';
+import { SpecialMessagesSurprises } from './components/SpecialMessagesSurprises';
+import { MyLittleWish } from './components/MyLittleWish';
+import { LoveGamesLounge } from './components/LoveGamesLounge';
+import { ContactMe } from './components/ContactMe';
+import { FloatingMusicPlayer } from './components/FloatingMusicPlayer';
 import { Footer } from './components/Footer';
-import { FloatingWhatsApp } from './components/FloatingWhatsApp';
-import { BackToTop } from './components/BackToTop';
-import { ServiceDetailsModal } from './components/ServiceDetailsModal';
-import { SamagriGuideModal } from './components/SamagriGuideModal';
-import { LegalModal } from './components/LegalModal';
-import { NotFoundView } from './components/NotFoundView';
-import { ServiceItem } from './types';
-
-function MainWebsite() {
-  const { t } = useLanguage();
-
-  // State for modals & booking service pre-selection
-  const [selectedServiceForDetails, setSelectedServiceForDetails] = useState<ServiceItem | null>(null);
-  const [preSelectedServiceId, setPreSelectedServiceId] = useState<string>('satyanarayan-katha');
-  const [isSamagriModalOpen, setIsSamagriModalOpen] = useState(false);
-  const [legalModalType, setLegalModalType] = useState<'privacy' | 'terms' | null>(null);
-  const [show404, setShow404] = useState(false);
-
-  // Scroll to booking form and set chosen service
-  const handleSelectServiceForBooking = (serviceId: string) => {
-    setPreSelectedServiceId(serviceId);
-    setShow404(false);
-    const contactElem = document.querySelector('#contact');
-    if (contactElem) {
-      contactElem.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleOpenBooking = () => {
-    setShow404(false);
-    const contactElem = document.querySelector('#contact');
-    if (contactElem) {
-      contactElem.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  if (show404) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FFF9ED]">
-        <Navbar
-          onOpenBooking={handleOpenBooking}
-          onOpenSamagriGuide={() => setIsSamagriModalOpen(true)}
-        />
-        <main className="flex-1">
-          <NotFoundView onReturnHome={() => setShow404(false)} />
-        </main>
-        <Footer
-          onOpenPrivacy={() => setLegalModalType('privacy')}
-          onOpenTerms={() => setLegalModalType('terms')}
-          onOpenSamagriGuide={() => setIsSamagriModalOpen(true)}
-          onOpenBooking={handleOpenBooking}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-[#FFF9ED] text-[#24060D] selection:bg-[#D6AD55]/30 selection:text-[#350A16]">
-      {/* Top Header */}
-      <Navbar
-        onOpenBooking={handleOpenBooking}
-        onOpenSamagriGuide={() => setIsSamagriModalOpen(true)}
-      />
-
-      {/* Main Content Sections */}
-      <main className="flex-1">
-        {/* Hero Section */}
-        <Hero onOpenBooking={handleOpenBooking} />
-
-        {/* About Section */}
-        <About />
-
-        {/* Services Section with All 10 Vedic Services */}
-        <Services
-          onSelectServiceForBooking={handleSelectServiceForBooking}
-          onOpenDetailsModal={(service) => setSelectedServiceForDetails(service)}
-        />
-
-        {/* Advance Payment Section (SBI Account Details & How to Pay) */}
-        <AdvancePayment onProceedToBooking={handleOpenBooking} />
-
-        {/* Booking Form & Contact Section */}
-        <BookingContact initialServiceId={preSelectedServiceId} />
-      </main>
-
-      {/* Footer */}
-      <Footer
-        onOpenPrivacy={() => setLegalModalType('privacy')}
-        onOpenTerms={() => setLegalModalType('terms')}
-        onOpenSamagriGuide={() => setIsSamagriModalOpen(true)}
-        onOpenBooking={handleOpenBooking}
-      />
-
-      {/* Persistent Floating Controls */}
-      <FloatingWhatsApp />
-      <BackToTop />
-
-      {/* Interactive Modals */}
-      <ServiceDetailsModal
-        service={selectedServiceForDetails}
-        onClose={() => setSelectedServiceForDetails(null)}
-        onBook={handleSelectServiceForBooking}
-      />
-
-      <SamagriGuideModal
-        isOpen={isSamagriModalOpen}
-        onClose={() => setIsSamagriModalOpen(false)}
-      />
-
-      <LegalModal
-        type={legalModalType}
-        onClose={() => setLegalModalType(null)}
-      />
-    </div>
-  );
-}
+import { romanticAudio } from './utils/romanticAudio';
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState(() => {
+    // Check if user has entered before in session
+    return sessionStorage.getItem('anand_entered_world') !== 'true';
+  });
+
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('anand_theme') === 'dark';
+  });
+
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+
+  // Sync dark class on document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('anand_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('anand_theme', 'light');
+    }
+  }, [darkMode]);
+
+  // Subscribe to audio engine changes
+  useEffect(() => {
+    const unsub = romanticAudio.subscribe((playing) => {
+      setIsPlayingMusic(playing);
+    });
+    return unsub;
+  }, []);
+
+  const handleEnterWorld = () => {
+    setShowIntro(false);
+    sessionStorage.setItem('anand_entered_world', 'true');
+  };
+
+  const handleReplayIntro = () => {
+    setShowIntro(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleMusic = () => {
+    romanticAudio.togglePlay();
+  };
+
   return (
-    <LanguageProvider>
-      <MainWebsite />
-    </LanguageProvider>
+    <div className="min-h-screen flex flex-col bg-[#FFF8F6] dark:bg-[#160B12] text-[#2D1B22] dark:text-[#FBEBF0] selection:bg-rose-300/40 selection:text-rose-900 transition-colors duration-300">
+      
+      {/* 2. Opening Experience Welcome Screen */}
+      <OpeningExperience isOpen={showIntro} onEnter={handleEnterWorld} />
+
+      {/* 16. Navigation Header & Controls */}
+      <Navbar
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+        onReplayIntro={handleReplayIntro}
+        isPlayingMusic={isPlayingMusic}
+        toggleMusic={handleToggleMusic}
+      />
+
+      {/* Main Sections */}
+      <main className="flex-1">
+        {/* 3. Hero Section */}
+        <Hero />
+
+        {/* 4. About Me */}
+        <AboutMe />
+
+        {/* 5. My Personality */}
+        <PersonalityCards />
+
+        {/* 6. My Dreams */}
+        <MyDreams />
+
+        {/* 7. My Journey */}
+        <MyJourney />
+
+        {/* 8. Love & Feelings */}
+        <LoveAndFeelings />
+
+        {/* 9. My Favourite Things */}
+        <FavouriteThings />
+
+        {/* 10. Travel Diaries */}
+        <TravelDiaries />
+
+        {/* 11. Personal Photo Gallery */}
+        <PhotoGallery />
+
+        {/* 12. Special Messages — Hidden Surprises */}
+        <SpecialMessagesSurprises />
+
+        {/* 13. My Little Wish */}
+        <MyLittleWish />
+
+        {/* Extra Feature: Love Lounge & Multiplayer Room Games */}
+        <LoveGamesLounge />
+
+        {/* 14. Contact Me */}
+        <ContactMe />
+      </main>
+
+      {/* 17. Footer */}
+      <Footer />
+
+      {/* 15. Floating Music Player */}
+      <FloatingMusicPlayer
+        isPlaying={isPlayingMusic}
+        onTogglePlay={handleToggleMusic}
+      />
+    </div>
   );
 }

@@ -1,213 +1,205 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, MessageCircle, Phone, Languages, Sparkles } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { motion, AnimatePresence } from 'motion/react';
+import { Heart, Sun, Moon, Menu, X, Send, Sparkles, Music2, Gamepad2 } from 'lucide-react';
+import { SITE_BRAND } from '../config/siteData';
 
-interface NavbarProps {
-  onOpenBooking: (serviceId?: string) => void;
-  onOpenSamagriGuide: () => void;
+interface Props {
+  darkMode: boolean;
+  setDarkMode: (val: boolean) => void;
+  onReplayIntro: () => void;
+  isPlayingMusic: boolean;
+  toggleMusic: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenBooking, onOpenSamagriGuide }) => {
-  const { language, toggleLanguage, t } = useLanguage();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export const Navbar: React.FC<Props> = ({
+  darkMode,
+  setDarkMode,
+  onReplayIntro,
+  isPlayingMusic,
+  toggleMusic
+}) => {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 40);
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalScroll > 0) {
+        setScrollProgress((window.scrollY / totalScroll) * 100);
+      }
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
-    { href: '#home', labelHi: 'मुखपृष्ठ', labelEn: 'Home' },
-    { href: '#about', labelHi: 'परिचय', labelEn: 'About Me' },
-    { href: '#services', labelHi: 'पूजन सेवाएं', labelEn: 'Puja Services' },
-    { href: '#payment', labelHi: 'अग्रिम दक्षिणा', labelEn: 'Advance Dakshina' },
-    { href: '#contact', labelHi: 'संपर्क', labelEn: 'Contact' },
+    { label: 'About', href: '#about' },
+    { label: 'Personality', href: '#personality' },
+    { label: 'Dreams', href: '#dreams' },
+    { label: 'Journey', href: '#journey' },
+    { label: 'Feelings', href: '#feelings' },
+    { label: 'Faves', href: '#faves' },
+    { label: 'Travel', href: '#travel' },
+    { label: 'Gallery', href: '#gallery' },
+    { label: 'Love Lounge 🎮', href: '#games', highlight: true },
+    { label: 'Surprises 💌', href: '#surprises' },
+    { label: 'Contact', href: '#contact' }
   ];
-
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    setMobileMenuOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <>
-      {/* Top Auspicious Gold & Maroon Ribbon */}
-      <div className="bg-[#24060D] text-[#FFF9ED] text-xs py-1.5 px-4 text-center border-b border-[#D6AD55]/30 tracking-wider">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="font-devanagari font-semibold text-[#D6AD55] flex items-center gap-1.5">
-            <span>{SITE_CONFIG.brand.ganeshMantra}</span>
-            <span className="hidden sm:inline text-amber-200/50">|</span>
-            <span className="hidden sm:inline">{SITE_CONFIG.brand.greeting}</span>
-          </span>
+      {/* Top Scroll Progress Bar */}
+      <div
+        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-rose-500 via-pink-400 to-amber-400 z-50 transition-all duration-150"
+        style={{ width: `${scrollProgress}%` }}
+      />
 
-          <span className="hidden md:inline-block text-[#FFF9ED]/80 text-xs">
-            {t(SITE_CONFIG.brand.taglineHi, SITE_CONFIG.brand.taglineEn)}
-          </span>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onOpenSamagriGuide}
-              className="text-[#D6AD55] hover:text-[#FFF9ED] text-xs underline underline-offset-2 flex items-center gap-1 cursor-pointer transition-colors"
-            >
-              <Sparkles className="w-3 h-3 text-[#D6AD55]" />
-              <span>{t('पूजा सामग्री सूची', 'Samagri List')}</span>
-            </button>
-            <span className="text-[#D6AD55]/40">|</span>
-            <a
-              href={SITE_CONFIG.contact.callUrl}
-              className="font-bold text-[#D6AD55] hover:text-white transition-colors flex items-center gap-1"
-            >
-              <Phone className="w-3 h-3" />
-              <span>{SITE_CONFIG.contact.displayPhone}</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Top Navigation Header */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           scrolled
-            ? 'bg-[#350A16]/95 backdrop-blur-md shadow-lg border-b border-[#D6AD55]/40 py-2.5 text-white'
-            : 'bg-[#350A16] border-b border-[#D6AD55]/30 py-3.5 text-white'
+            ? 'py-3 bg-white/80 dark:bg-[#1A0D15]/85 backdrop-blur-md border-b border-pink-200/50 dark:border-pink-900/40 shadow-sm'
+            : 'py-5 bg-transparent'
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-6">
-          {/* Zone 1: Brand Wordmark with Portrait Icon */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Brand Logo */}
           <a
-            href="#home"
-            className="group flex items-center gap-3 text-lg sm:text-xl font-bold tracking-tight text-[#FFF9ED] font-devanagari hover:text-[#D6AD55] transition-colors whitespace-nowrap shrink-0"
+            href="#hero"
+            className="group flex items-center gap-2.5 font-serif-luxury text-xl sm:text-2xl font-bold tracking-wider text-[#2D1B22] dark:text-[#FFF0F4]"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#D6AD55] shadow-sm shrink-0">
-              <img
-                src={SITE_CONFIG.profile.photoSrc}
-                alt={SITE_CONFIG.brand.nameHi}
-                className="w-full h-full object-cover object-[center_12%]"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-bold leading-tight text-[#FFF9ED] group-hover:text-[#D6AD55]">
-                {t(SITE_CONFIG.brand.nameHi, SITE_CONFIG.brand.nameEn)}
-              </span>
-              <span className="text-[10px] text-[#D6AD55] font-sans font-normal tracking-wider hidden sm:block">
-                Chirawa, Jhunjhunu (Raj.)
-              </span>
-            </div>
+            <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 text-white shadow-md shadow-rose-500/20 text-xs font-sans">
+              <Heart className="w-4 h-4 fill-white animate-pulse" />
+            </span>
+            <span className="tracking-[0.18em]">{SITE_BRAND.name}</span>
+            <span className="hidden sm:inline font-script text-base font-normal text-rose-500 dark:text-rose-300">
+              • my little world
+            </span>
           </a>
 
-          {/* Zone 2: Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-stone-200">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden xl:flex items-center gap-6">
             {navLinks.map((link) => (
               <a
-                key={link.href}
+                key={link.label}
                 href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="hover:text-[#D6AD55] transition-colors whitespace-nowrap shrink-0 hover:underline underline-offset-4 decoration-[#D6AD55]"
+                className={`text-sm tracking-wide transition-colors relative py-1 ${
+                  link.highlight
+                    ? 'font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-3 py-1 rounded-full border border-rose-200/60 dark:border-rose-800/40'
+                    : 'text-[#4A2D39] dark:text-[#E2CAD4] hover:text-rose-600 dark:hover:text-rose-300'
+                }`}
               >
-                {t(link.labelHi, link.labelEn)}
+                {link.label}
               </a>
             ))}
           </nav>
 
-          {/* Zone 3: Primary Action Buttons & Language Switcher */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            {/* Language Switch */}
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Audio Mini Toggle */}
             <button
-              onClick={toggleLanguage}
-              aria-label="Toggle language"
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#D6AD55] bg-[#24060D] hover:bg-[#24060D]/80 rounded border border-[#D6AD55]/50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
-              title={language === 'hi' ? 'Switch to English' : 'हिन्दी में बदलें'}
+              onClick={toggleMusic}
+              title={isPlayingMusic ? 'Pause Music' : 'Play O Sanam'}
+              className={`p-2 rounded-full border transition-all cursor-pointer ${
+                isPlayingMusic
+                  ? 'bg-rose-100 dark:bg-rose-950 border-rose-300 text-rose-600 dark:text-rose-300 shadow-sm'
+                  : 'bg-white/60 dark:bg-white/5 border-pink-200/60 dark:border-pink-900/40 text-stone-600 dark:text-stone-300 hover:text-rose-500'
+              }`}
             >
-              <Languages className="w-3.5 h-3.5 text-[#D6AD55]" />
-              <span>{language === 'hi' ? 'ENG' : 'हिन्दी'}</span>
+              <Music2 className={`w-4 h-4 ${isPlayingMusic ? 'animate-bounce' : ''}`} />
             </button>
 
-            {/* Quick Call Button */}
-            <a
-              href={SITE_CONFIG.contact.callUrl}
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#24060D] bg-[#D6AD55] hover:bg-[#F5DE9C] rounded shadow transition-all whitespace-nowrap shrink-0"
+            {/* Replay Intro Button */}
+            <button
+              onClick={onReplayIntro}
+              title="Replay Opening Experience"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-white/70 dark:bg-white/5 border border-pink-200/60 dark:border-pink-900/40 text-[#5C3847] dark:text-[#E2CAD4] hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors cursor-pointer"
             >
-              <Phone className="w-3.5 h-3.5" />
-              <span>{t('कॉल करें', 'Call Now')}</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Intro</span>
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              title={darkMode ? 'Switch to Light Rose Mode' : 'Switch to Velvet Night Mode'}
+              className="p-2 rounded-full bg-white/70 dark:bg-white/5 border border-pink-200/60 dark:border-pink-900/40 text-[#5C3847] dark:text-amber-300 hover:text-rose-600 transition-colors cursor-pointer"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Direct Telegram Link Button */}
+            <a
+              href={SITE_BRAND.telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-white bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Telegram</span>
             </a>
 
-            {/* Puja Book Button */}
-            <button
-              onClick={() => onOpenBooking()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#E58A16] to-[#C25E00] hover:from-[#F59E0B] hover:to-[#E58A16] rounded shadow-md hover:shadow-lg transition-all whitespace-nowrap shrink-0 cursor-pointer border border-amber-300/40"
-            >
-              <MessageCircle className="w-4 h-4 text-amber-200" />
-              <span>{t('पूजा बुक करें', 'Book Puja')}</span>
-            </button>
-
-            {/* Mobile Hamburger */}
+            {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 text-stone-200 hover:text-[#D6AD55] rounded focus:outline-none cursor-pointer"
-              aria-label="Toggle menu"
+              className="xl:hidden p-2 rounded-xl bg-white/70 dark:bg-white/5 border border-pink-200/60 dark:border-pink-900/40 text-[#4A2D39] dark:text-[#FFF0F4] cursor-pointer"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#24060D] border-b border-[#D6AD55]/40 px-6 py-5 shadow-2xl animate-in slide-in-from-top-2 text-stone-200">
-            <nav className="flex flex-col gap-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
-                  className="py-2 text-base font-medium text-stone-200 hover:text-[#D6AD55] border-b border-amber-900/40"
-                >
-                  {t(link.labelHi, link.labelEn)}
-                </a>
-              ))}
-              <div className="pt-3 flex flex-col gap-2.5">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenBooking();
-                  }}
-                  className="w-full py-2.5 px-4 text-center text-sm font-bold text-white bg-[#E58A16] hover:bg-[#C25E00] rounded flex items-center justify-center gap-2 shadow"
-                >
-                  <MessageCircle className="w-4 h-4 text-amber-200" />
-                  <span>{t('पूजा बुक करें', 'Book Puja')}</span>
-                </button>
+        {/* Mobile Drawer Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="xl:hidden bg-white/95 dark:bg-[#1E0E18]/95 backdrop-blur-xl border-b border-pink-200/60 dark:border-pink-900/40 px-6 py-5 overflow-hidden"
+            >
+              <div className="grid grid-cols-2 gap-3 py-2">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-3 py-2 rounded-xl text-sm transition-all ${
+                      link.highlight
+                        ? 'bg-rose-500 text-white font-semibold flex items-center gap-1.5'
+                        : 'text-[#4A2D39] dark:text-[#E2CAD4] hover:bg-rose-50 dark:hover:bg-rose-950/50'
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
 
+              <div className="pt-4 border-t border-pink-100 dark:border-pink-900/40 flex items-center justify-between">
                 <a
-                  href={SITE_CONFIG.contact.callUrl}
-                  className="w-full py-2 px-4 text-center text-xs font-bold text-[#24060D] bg-[#D6AD55] hover:bg-[#F5DE9C] rounded flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{t('कॉल करें: ', 'Call: ') + SITE_CONFIG.contact.displayPhone}</span>
-                </a>
-
-                <a
-                  href={SITE_CONFIG.contact.whatsappUrl}
+                  href={SITE_BRAND.telegramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2 px-4 text-center text-xs font-bold text-white bg-[#25D366] hover:bg-[#1EBE5D] rounded flex items-center justify-center gap-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-amber-500 shadow-sm"
                 >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>{t('WhatsApp पर बात करें', 'Chat on WhatsApp')}</span>
+                  <Send className="w-4 h-4" />
+                  <span>Chat on Telegram</span>
                 </a>
+
+                <button
+                  onClick={() => {
+                    onReplayIntro();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="px-3 py-1.5 rounded-full text-xs text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                >
+                  Replay Intro 🌸
+                </button>
               </div>
-            </nav>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
     </>
   );
